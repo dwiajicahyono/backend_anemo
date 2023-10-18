@@ -1,0 +1,288 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API Dev</title><style>body,html{margin:0;height:100%;background:#03032b;overflow:hidden;perspective:10rem}#canvas{position:absolute;width:100%;height:100%;overflow:hidden}.rain{position:absolute;width:1rem;height:10rem;background:#fff;border-radius:20%;opacity:.4;z-index:-1}.drop{width:1rem;height:7rem;background:#fff;position:absolute;border-radius:20%;opacity:.2}.rain1{left:5rem;top:2rem;animation:raining 2s linear infinite both}.rain2{left:15rem;top:10rem;animation:raining 3s linear infinite both}.drop2{top:12rem;animation:raining 4s linear infinite both -2s}.rain3{left:5rem;top:35rem;animation:raining 3s linear infinite both}.rain4{right:23rem;top:6rem;animation:raining 4s linear infinite both}.rain5{left:25rem;top:47rem;animation:raining 3s linear infinite both -3s}.drop5{top:-6rem;animation:raining 2s linear infinite both}.rain6{right:10rem;top:34rem;animation:raining 3s linear infinite both}.rain7{left:34rem;top:10rem;animation:raining 2s linear infinite both -5s}.rain8{right:25rem;top:40rem;animation:raining 3s linear infinite both}.drop8{top:-7rem;animation:raining 4s linear infinite both -6s}.rain9{right:5rem;top:15.5rem;animation:raining 3s linear infinite both}.rain10{left:24rem;top:-4rem;animation:raining 2s linear infinite both -3s}.drop11{right:17rem;top:20rem;animation:raining 3s linear infinite both}.drop12{right:15rem;top:50rem;animation:raining 4s linear infinite both -1s}@keyframes raining{from{transform:translateY(-1200px)}to{transform:translateY(869px)}}@keyframes typewriter{from{width:0}to{width:100%}}@keyframes blinkTextCursor{from{border-right-color:rgba(255,255,255,.75)}to{border-right-color:transparent}}.typewriter-text{font-size:100px!important;color:#fff;font-family:monospace;overflow:hidden;border-right:2px solid rgba(255,255,255,.75);white-space:nowrap;margin:0 auto;animation:typewriter 4s steps(40) 1s 1 normal both,blinkTextCursor .5s steps(40) infinite normal;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:10}.text-container{position:absolute;top:50%;left:50%;color:#fff;transform:translate(-50%,-50%);padding:10px 20px;z-index:10;white-space:nowrap;overflow:hidden}.bg-text{position:absolute;top:50%;left:50%;color:#fff;transform:translate(-50%,-50%);padding:100%;background-color:rgba(0,0,0,.5);z-index:10;white-space:nowrap;overflow:hidden}.scrolling-text{display:inline-block;animation:scrollText 10s linear infinite;white-space:nowrap}@keyframes scrollText{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}</style></head><body><div class="bg-text"><div class="text-container"><div class="scrolling-text">Powered By Dwi Aji Cahyono | You can try with my Endpoint / MQTT</div></div></div><div class="rain rain1"></div><div class="rain rain2"><div class="drop drop2"></div></div><div class="rain rain3"></div><div class="rain rain4"></div><div class="rain rain5"><div class="drop drop5"></div></div><div class="rain rain6"></div><div class="rain rain7"></div><div class="rain rain8"><div class="drop drop8"></div></div><div class="rain rain9"></div><div class="rain rain10"></div><div class="drop drop11"></div><div class="drop drop12"></div><div id="canvas"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script><script>let scene,
+  camera,
+  fieldOfView,
+  aspectRatio,
+  nearPlane,
+  farPlane,
+  renderer,
+  container,
+  rocket,
+  rocket_fire,
+  HEIGHT,
+  WIDTH;
+
+const createScene = () => {
+  HEIGHT = window.innerHeight;
+  WIDTH = window.innerWidth;
+
+  scene = new THREE.Scene();
+
+  //scene.fog = new THREE.Fog(0x03032b, 10, 1500);
+
+  aspectRatio = WIDTH / HEIGHT;
+  fieldOfView = 60;
+  nearPlane = 1;
+  farPlane = 10000;
+  camera = new THREE.PerspectiveCamera(
+    fieldOfView,
+    aspectRatio,
+    nearPlane,
+    farPlane
+  );
+
+  camera.position.x = 0;
+  camera.position.z = 200;
+  camera.position.y = 0;
+
+  renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true
+  });
+  renderer.setSize(WIDTH, HEIGHT);
+
+  renderer.shadowMap.enabled = true;
+
+  container = document.getElementById("canvas");
+  container.appendChild(renderer.domElement);
+
+  window.addEventListener("resize", handleWindowResize, false);
+
+  // Create rocket group
+
+  const rocketParts = {};
+
+  rocketParts.topc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0, 6, 4, 64),
+    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  );
+  scene.add(rocketParts.topc);
+  rocketParts.topc.position.y = 60;
+
+  rocketParts.topa = new THREE.Mesh(
+    new THREE.CylinderGeometry(6, 12, 8, 64),
+    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  );
+  scene.add(rocketParts.topa);
+  rocketParts.topa.position.y = 54;
+
+  rocketParts.topb = new THREE.Mesh(
+    new THREE.CylinderGeometry(12, 18, 20, 64),
+    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  );
+  scene.add(rocketParts.topb);
+  rocketParts.topb.position.y = 40;
+
+  rocketParts.mida = new THREE.Mesh(
+    new THREE.CylinderGeometry(18, 20, 16, 64),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  scene.add(rocketParts.mida);
+  rocketParts.mida.position.y = 22;
+
+  rocketParts.midc = new THREE.Mesh(
+    new THREE.CylinderGeometry(20, 20, 8, 64),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  scene.add(rocketParts.midc);
+  rocketParts.midc.position.y = 10;
+
+  rocketParts.midb = new THREE.Mesh(
+    new THREE.CylinderGeometry(20, 18, 16, 64),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, receiveShadow: false })
+  );
+  scene.add(rocketParts.midb);
+  rocketParts.midb.position.y = -2;
+
+  rocketParts.bota = new THREE.Mesh(
+    new THREE.CylinderGeometry(18, 14, 10, 64),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  scene.add(rocketParts.bota);
+  rocketParts.bota.position.y = -15;
+
+  rocketParts.botb = new THREE.Mesh(
+    new THREE.CylinderGeometry(14, 12, 6, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0xeeeeee,
+      roughness: 0.5,
+      metalness: 1,
+      side: THREE.DoubleSide
+    })
+  );
+  scene.add(rocketParts.botb);
+  rocketParts.botb.position.y = -20;
+
+  rocketParts.botc = new THREE.Mesh(
+    new THREE.CylinderGeometry(10, 8, 4, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0x333333,
+      roughness: 0,
+      metalness: 1,
+      side: THREE.DoubleSide
+    })
+  );
+  scene.add(rocketParts.botc);
+  rocketParts.botc.position.y = -22;
+
+  rocketParts.wina = new THREE.Mesh(
+    new THREE.CylinderGeometry(12, 12, 23, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0xeeeeee,
+      roughness: 0.5,
+      metalness: 1,
+      side: THREE.DoubleSide
+    })
+  );
+  scene.add(rocketParts.wina);
+  rocketParts.wina.position.set(0, 20, 10);
+  rocketParts.wina.rotation.set(Math.PI / 2, 0, 0);
+
+  // Rocket window
+  rocketParts.winb = new THREE.Mesh(
+    new THREE.CylinderGeometry(9, 9, 8, 64),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x0077ff,
+      roughness: 0.1,
+      transmission: 1,
+      thickness: 0.9,
+      side: THREE.DoubleSide
+    })
+  );
+  scene.add(rocketParts.winb);
+  rocketParts.winb.position.set(0, 20, 18);
+  rocketParts.winb.rotation.set(Math.PI / 2, 0, 0);
+
+  rocketParts.fina = new THREE.Mesh(
+    new THREE.BoxBufferGeometry(40, 8, 18),
+    new THREE.MeshStandardMaterial({
+      color: 0xff0000
+    })
+  );
+  scene.add(rocketParts.fina);
+  rocketParts.fina.position.set(16, -10, 0);
+  rocketParts.fina.rotation.set(Math.PI / 2, 0.7 * Math.PI, 0);
+
+  rocketParts.finb = new THREE.Mesh(
+    new THREE.BoxBufferGeometry(40, 8, 18),
+    new THREE.MeshStandardMaterial({
+      color: 0xff0000
+    })
+  );
+  scene.add(rocketParts.finb);
+  rocketParts.finb.position.set(-16, -10, 0);
+  rocketParts.finb.rotation.set(-Math.PI / 2, 0.7 * Math.PI, 0);
+
+  var flame_material = new THREE.ShaderMaterial({
+    uniforms: {
+      color1: {
+        value: new THREE.Color("yellow")
+      },
+      color2: {
+        value: new THREE.Color("red")
+      }
+    },
+    vertexShader: `
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+  `,
+    fragmentShader: `
+    uniform vec3 color1;
+    uniform vec3 color2;
+  
+    varying vec2 vUv;
+    
+    void main() {
+      
+      gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
+    }
+  `,
+    wireframe: true
+  });
+
+  rocket_fire = new THREE.Mesh(
+    new THREE.CylinderGeometry(6, 0, 20, 64),
+    flame_material
+  );
+  scene.add(rocket_fire);
+  rocket_fire.position.y = -30;
+
+  rocket = new THREE.Group();
+  rocket.add(
+    rocketParts.midb,
+    rocketParts.mida,
+    rocketParts.midc,
+    rocketParts.topa,
+    rocketParts.topb,
+    rocketParts.bota,
+    rocketParts.botb,
+    rocketParts.botc,
+    rocketParts.topc,
+    rocketParts.wina,
+    rocketParts.winb,
+    rocketParts.fina,
+    rocketParts.finb,
+    rocket_fire
+  );
+  rocket.position.y = 0;
+  scene.add(rocket);
+};
+
+const handleWindowResize = () => {
+  HEIGHT = window.innerHeight;
+  WIDTH = window.innerWidth;
+  renderer.setSize(WIDTH, HEIGHT);
+  camera.aspect = WIDTH / HEIGHT;
+  camera.updateProjectionMatrix();
+};
+
+const createLights = () => {
+  const ambientLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.25);
+
+  const directionalLight = new THREE.DirectionalLight(0xffcb87, 1);
+  directionalLight.position.set(-300, 300, 600);
+
+  const pointLight = new THREE.PointLight(0xff4f4f, 2, 1000, 2);
+  pointLight.position.set(-200, 100, 50);
+
+  scene.add(ambientLight, directionalLight, pointLight);
+};
+
+const targetRocketPosition = 40;
+const animationDuration = 2000;
+
+const loop = () => {
+  const t = (Date.now() % animationDuration) / animationDuration;
+
+  renderer.render(scene, camera);
+
+  const delta = targetRocketPosition * Math.sin(Math.PI * 2 * t);
+  if (rocket) {
+    rocket.rotation.y += 0.01;
+    rocket.rotation.x += 0.01;
+    rocket.rotation.z += 0.01;
+    rocket.position.y = delta;
+  }
+  if (rocket_fire) {
+    rocket_fire.scale.set(
+      1 + delta / 100,
+      1 + Math.abs(delta / 100),
+      1 + delta / 100
+    );
+  }
+
+  requestAnimationFrame(loop);
+};
+
+const main = () => {
+  createScene();
+  createLights();
+
+  renderer.render(scene, camera);
+  loop();
+};
+
+main();</script></body></html>

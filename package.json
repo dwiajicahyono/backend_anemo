@@ -1,6 +1,6 @@
 {
   "name": "3d-anemometer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "created by dwi",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Dwi Aji Cahyono",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",
