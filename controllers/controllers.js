@@ -35,7 +35,6 @@ exports.add3dAnemo = (request, response) => {
       //   2,
       //   "0"
       // )}:${waktuParts[2].padStart(2, "0")}`;
-      row.timestamp = parseFloat(row.timestamp);
 
       row.selatan = parseFloat(row.selatan);
       row.timur = parseFloat(row.timur);
