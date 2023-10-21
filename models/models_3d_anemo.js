@@ -14,11 +14,8 @@ const anemo_sequelize = new Sequelize(
 );
 
 const anemo3d = anemo_sequelize.define("anemo3d", {
-  tanggal: {
+  timestamp: {
     type: Sequelize.DATE,
-  },
-  waktu: {
-    type: Sequelize.TIME,
   },
   selatan: {
     type: Sequelize.FLOAT,

@@ -58,10 +58,10 @@ db.sequelize.sync();
 app.use(express.static('public'));
 app.use('/api', route);
 
-// app.use('/', cors(), (req, res) => {
-//   res.status(404);
-//   res.send('POWERED BY DWI AJI| You Can Try in ROOT');
-// });
+app.use('/', cors(), (req, res) => {
+  res.status(404);
+  res.send('POWERED BY DWI AJI| You Can Try in ROOT');
+});
 
 // set port, listen for requests
 const PORT = process.env.PORT;

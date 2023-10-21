@@ -9,6 +9,7 @@ const options = {
     password: process.env.PASSWORDMQTT
 };
 
+
 const client = mqtt.connect(process.env.LINKMQTT, options);
 
 client.on('connect', () => {
@@ -32,9 +33,9 @@ client.on('message', async (topic, message) => {
 
             s.pipe(csvParser())
                 .on('data', (row) => {
-                    let waktuParts = row.waktu.split('.');
-                    row.waktu = `${waktuParts[0].padStart(2, '0')}:${waktuParts[1].padStart(2, '0')}:${waktuParts[2].padStart(2, '0')}`;
-
+                    // let waktuParts = row.waktu.split('.');
+                    // row.waktu = `${waktuParts[0].padStart(2, '0')}:${waktuParts[1].padStart(2, '0')}:${waktuParts[2].padStart(2, '0')}`;
+                    row.timestamp = parseFloat(row.timestamp);
                     row.selatan = parseFloat(row.selatan);
                     row.timur = parseFloat(row.timur);
                     row.utara = parseFloat(row.utara);
@@ -56,7 +57,8 @@ client.on('message', async (topic, message) => {
                 .on('end', () => {
                     anemo3d.bulkCreate(data)
                         .then(() => {
-                            console.log("Data CSV inserted into the database!" + JSON.stringify(data));
+                            console.log("Data CSV inserted into the database!");
+                            // console.log("Data CSV inserted into the database!" + JSON.stringify(data));
                         })
                         .catch((err) => {
                             console.error('Error:', err);
