@@ -8,7 +8,7 @@ const anemo3d = require("../models/models_3d_anemo"); // Import model sekali saj
 exports.get50anemo3d = (req, res) => {
   anemo3d.findAll({
     limit: 50,
-    order: [["createdAt", "DESC"]],
+    order: [["id", "DESC"]],
   })
   .then(result => {
     res.json({
@@ -18,6 +18,18 @@ exports.get50anemo3d = (req, res) => {
   })
   .catch(error => {
     res.status(500).json({ error: "Internal server error" });
+  });
+};
+
+exports.getlastanemo3d = (req, res) => {
+  anemo3d.findOne({
+    order: [['id', 'DESC']],
+  })
+  .then((result) => {
+    res.json(result); // Gunakan 'res' bukan 'response'
+  })
+  .catch((error) => {
+    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
   });
 };
 
@@ -34,13 +46,13 @@ exports.downloadanemo3d = async (req, res) => {
     // Mengambil semua data yang tersedia hingga limit
     const allData = await anemo3d.findAll({
       where: {
-        ts: {
-          [anemo3d.Op.gte]: startDate,
-          [anemo3d.Op.lt]: endDate,
+        timestamp: {
+          [Op.gte]: startDate,
+          [Op.lt]: endDate,
         },
       },
       limit: limit,
-      order: [['id', 'ASC']], // Pengurutan berdasarkan 'id' dari terkecil ke terbesar
+      order: [['id', 'ASC']],
     });
 
     console.log(`Total data gathered: ${allData.length}`);

@@ -59,9 +59,9 @@ const anemo3d = anemo_sequelize.define("anemo3d", {
   sht31_humidity: {
     type: Sequelize.FLOAT,
   },
-  heat_index: {
-    type: Sequelize.FLOAT,
-  },
+  // heat_index: {
+  //   type: Sequelize.FLOAT,
+  // },
   approx_altitude: {
     type: Sequelize.FLOAT,
   },
