@@ -1,72 +1,95 @@
 const fs = require("fs");
 const csvParser = require("csv-parser");
-const path = require("path");
-const { Sequelize } = require("sequelize");
-const anemo3d = require("../models/models_3d_anemo"); // Hanya import sekali
+const { Sequelize, Op } = require("sequelize");
+const fastcsv = require('fast-csv');
+const anemo3d = require("../models/models_3d_anemo"); // Import model sekali saja
 
-exports.get50anemo3d = (request, response) => {
-  anemo3d
-    .findAll({
-      limit: 50,
-      order: [["createdAt", "DESC"]],
-    })
-    .then((result) => {
-      response.json({
-        count: result.length,
-        data: result,
-      });
-    })
-    .catch((error) => {
-      response.status(500).json({ error: "Internal server error" });
+// Mendapatkan 50 data anemo3d terbaru
+exports.get50anemo3d = (req, res) => {
+  anemo3d.findAll({
+    limit: 50,
+    order: [["createdAt", "DESC"]],
+  })
+  .then(result => {
+    res.json({
+      count: result.length,
+      data: result,
     });
+  })
+  .catch(error => {
+    res.status(500).json({ error: "Internal server error" });
+  });
 };
 
-exports.add3dAnemo = (request, response) => {
-  if (!request.file) {
-    return response.status(400).send("No CSV file uploaded");
+// Mendownload data anemo3d
+exports.downloadanemo3d = async (req, res) => {
+  try {
+    // Validasi dan konversi parameter
+    const startDate = new Date(req.query.startDate);
+    const endDate = new Date(req.query.endDate);
+    const limit = parseInt(req.query.limit);
+
+    console.log(`Received parameters: startDate = ${startDate}, endDate = ${endDate}, limit = ${limit}`);
+
+    // Mengambil semua data yang tersedia hingga limit
+    const allData = await anemo3d.findAll({
+      where: {
+        ts: {
+          [anemo3d.Op.gte]: startDate,
+          [anemo3d.Op.lt]: endDate,
+        },
+      },
+      limit: limit,
+      order: [['id', 'ASC']], // Pengurutan berdasarkan 'id' dari terkecil ke terbesar
+    });
+
+    console.log(`Total data gathered: ${allData.length}`);
+
+    // Setup CSV stream
+    const csvStream = fastcsv.format({ headers: true });
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=Carbon1DataLength-${startDate}-${endDate}-${allData.length}.csv`);
+
+    // Pipe CSV stream to response
+    csvStream.pipe(res).on('end', () => res.end());
+
+    // Write data to CSV
+    allData.forEach(item => csvStream.write(item.dataValues));
+
+    // End CSV stream
+    csvStream.end();
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Error during data download');
+  }
+};
+
+// Menambahkan data anemo3d dari CSV
+exports.add3dAnemo = (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("No CSV file uploaded");
   }
 
   const data = [];
-  fs.createReadStream(request.file.path)
+  fs.createReadStream(req.file.path)
     .pipe(csvParser())
-    .on("data", (row) => {
-      // let waktuParts = row.waktu.split(".");
-      // row.waktu = `${waktuParts[0].padStart(2, "0")}:${waktuParts[1].padStart(
-      //   2,
-      //   "0"
-      // )}:${waktuParts[2].padStart(2, "0")}`;
-
-      row.selatan = parseFloat(row.selatan);
-      row.timur = parseFloat(row.timur);
-      row.utara = parseFloat(row.utara);
-      row.barat = parseFloat(row.barat);
-      row.bawah = parseFloat(row.bawah);
-      row.atas = parseFloat(row.atas);
-      row.co2_concentration = parseFloat(row.co2_concentration);
-      row.ch4_concentration = parseFloat(row.ch4_concentration);
-      row.dht_temperature = parseFloat(row.dht_temperature);
-      row.dht_humidity = parseFloat(row.dht_humidity);
-      row.bmp_temperature = parseFloat(row.bmp_temperature);
-      row.bmp_pressure = parseFloat(row.bmp_pressure);
-      row.sht31_temperature = parseFloat(row.sht31_temperature);
-      row.sht31_humidity = parseFloat(row.sht31_humidity);
-
+    .on("data", row => {
+      // Konversi dan normalisasi data
+      Object.keys(row).forEach(key => {
+        row[key] = isNaN(row[key]) ? row[key] : parseFloat(row[key]);
+      });
       data.push(row);
     })
     .on("end", () => {
-      // Masukkan data dari CSV ke tabel di database
-      anemo3d
-        .bulkCreate(data)
+      // Insert data ke database
+      anemo3d.bulkCreate(data)
         .then(() => {
-          response
-            .status(200)
-            .send(
-              "Data imported successfully with data: " + JSON.stringify(data)
-            );
+          res.status(200).send("Data imported successfully");
         })
-        .catch((err) => {
+        .catch(err => {
           console.error("Error:", err);
-          response.status(500).send("Failed to import data");
+          res.status(500).send("Failed to import data");
         });
     });
 };

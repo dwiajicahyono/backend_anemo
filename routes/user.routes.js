@@ -33,6 +33,7 @@ router.get('/', (req, res) => {
   });
 
 router.get('/get50_3d_anemo', controller.get50anemo3d);
+router.get('/downloadanemo3d', controller.downloadanemo3d);
 router.post('/up3d_anemo', uploadUp3D.single('csvFile'), controller.add3dAnemo);
 
 // Jangan lupa untuk mengekspor router Anda
