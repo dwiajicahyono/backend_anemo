@@ -33,17 +33,213 @@ exports.getlastanemo3d = (req, res) => {
   });
 };
 
-exports.getlatestanemo3d = (req, res) => {
-  anemo3d.findOne({
-    order: [['timestamp', 'DESC']],
+// ****************************************************************
+// Get Daily Data 
+// ****************************************************************
+exports.carbondaily = (request, response) => {
+  const currentDate = new Date();
+  const startdate = new Date(currentDate);
+  startdate.setDate(currentDate.getDate() - 1);
+  const endDate = new Date(currentDate);
+
+  anemo3d.findAll({
+    attributes: [
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('absolute_humidity')), 'absolute_humidity']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startdate, endDate],
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))],
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
   })
-  .then((result) => {
-    res.json(result); // Gunakan 'res' bukan 'response'
-  })
-  .catch((error) => {
-    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
-  });
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.timestamp,
+          co2_concentration: parseFloat(item.co2_concentration),
+          ch4_concentration: parseFloat(item.ch4_concentration),
+          dht_temperature: parseFloat(item.dht_temperature),
+          dht_humidity: parseFloat(item.dht_humidity),
+          bmp_temperature: parseFloat(item.bmp_temperature),
+          bmp_pressure: parseFloat(item.bmp_pressure),
+          sht31_temperature: parseFloat(item.sht31_temperature),
+          sht31_humidity: parseFloat(item.sht31_humidity),
+          approx_altitude: parseFloat(item.approx_altitude),
+          absolute_humidity: parseFloat(item.absolute_humidity),
+        };
+      });
+      response.json(modifiedResult);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
 };
+exports.anemodaily = (request, response) => {
+  const currentDate = new Date();
+  const startdate = new Date(currentDate);
+  startdate.setDate(currentDate.getDate() - 1);
+  const endDate = new Date(currentDate);
+
+  anemo3d.findAll({
+    attributes: [
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startdate, endDate],
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))],
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.timestamp,
+          selatan: parseFloat(item.selatan),
+          timur: parseFloat(item.timur),
+          utara: parseFloat(item.utara),
+          barat: parseFloat(item.barat),
+          bawah: parseFloat(item.bawah),
+          atas: parseFloat(item.atas)
+        };
+      });
+      response.json(modifiedResult);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+
+// ****************************************************************
+// GET 7 Day DATA
+// ****************************************************************
+exports.carbonweekly = async (request, response) => {
+
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 7);
+
+  // Query database untuk data setiap 30 menit selama 7 hari terakhir
+  anemo3d.findAll({
+    attributes: [
+      [Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)"), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('absolute_humidity')), 'absolute_humidity']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startDate, currentDate],
+      },
+    },
+    group: [Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)")],
+    order: [[Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)"), 'ASC']],
+  }).then(result => {
+    const modifiedResult = result.map(item => {
+      return {
+        timestamp: item.timestamp,
+        co2_concentration: parseFloat(item.co2_concentration),
+        ch4_concentration: parseFloat(item.ch4_concentration),
+        dht_temperature: parseFloat(item.dht_temperature),
+        dht_humidity: parseFloat(item.dht_humidity),
+        bmp_temperature: parseFloat(item.bmp_temperature),
+        bmp_pressure: parseFloat(item.bmp_pressure),
+        sht31_temperature: parseFloat(item.sht31_temperature),
+        sht31_humidity: parseFloat(item.sht31_humidity),
+        approx_altitude: parseFloat(item.approx_altitude),
+        absolute_humidity: parseFloat(item.absolute_humidity),
+      };
+    });
+    response.json(modifiedResult);
+  })
+    .catch(error => {
+      console.error('Error details:', error);
+      response.status(500).json({ error: 'Internal server error', details: error.message });
+    });
+};
+exports.anemoweekly = async (request, response) => {
+
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 7);
+
+  // Query database untuk data setiap 30 menit selama 7 hari terakhir
+  anemo3d.findAll({
+    attributes: [
+      [Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)"), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startDate, currentDate],
+      },
+    },
+    group: [Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)")],
+    order: [[Sequelize.literal("date_trunc('hour', \"timestamp\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"timestamp\") / 30)"), 'ASC']],
+  }).then(result => {
+    const modifiedResult = result.map(item => {
+      return {
+        timestamp: item.timestamp,
+        selatan: parseFloat(item.selatan),
+        timur: parseFloat(item.timur),
+        utara: parseFloat(item.utara),
+        barat: parseFloat(item.barat),
+        bawah: parseFloat(item.bawah),
+        atas: parseFloat(item.atas)
+      };
+    });
+    response.json(modifiedResult);
+  })
+    .catch(error => {
+      console.error('Error details:', error);
+      response.status(500).json({ error: 'Internal server error', details: error.message });
+    });
+};
+
+// exports.getlatestanemo3d = (req, res) => {
+//   anemo3d.findOne({
+//     order: [['timestamp', 'DESC']],
+//   })
+//   .then((result) => {
+//     res.json(result); // Gunakan 'res' bukan 'response'
+//   })
+//   .catch((error) => {
+//     res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
+//   });
+// };
 
 // Mendownload data anemo3d
 exports.downloadanemo3d = async (req, res) => {

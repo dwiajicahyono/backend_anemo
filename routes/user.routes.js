@@ -33,8 +33,10 @@ router.get('/', (req, res) => {
   });
 
 router.get('/get50_3d_anemo', controller.get50anemo3d);
-router.get('/3danemo_latest', controller.getlastanemo3d);
-router.get('/carbon_latest', controller.getlatestanemo3d);
+router.get('/edstation_latest', controller.getlastanemo3d);
+router.get('/gas_daily', controller.carbondaily);
+router.get('/anemo_daily', controller.anemodaily);
+// router.get('/carbon_latest', controller.getlatestanemo3d);
 router.get('/downloadanemo3d', controller.downloadanemo3d);
 router.post('/up3d_anemo', uploadUp3D.single('csvFile'), controller.add3dAnemo);
 
