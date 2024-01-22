@@ -11,18 +11,19 @@ const upload = multer({ storage: storage });
 
 
 const fs = require('fs');
-const http = require('http');
-const https = require('https');
-// konfigurasi http
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/chain.pem', 'utf8');
+// const http = require('http');
+// const https = require('https');
+// // konfigurasi http
+// const privateKey = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/privkey.pem', 'utf8');
+// const certificate = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/cert.pem', 'utf8');
+// const ca = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/chain.pem', 'utf8');
 
-const credentials = {
-  key: privateKey,
-  cert: certificate,
-  ca: ca
-};
+// const credentials = {
+//   key: privateKey,
+//   cert: certificate,
+//   ca: ca
+// };
+
 const app = express();
 
 
@@ -72,8 +73,8 @@ app.listen(PORT, () => {
 // Starting the https server
 // Mulai server HTTPS
 
-const HTTPS_PORT = 7800;  // Ganti dengan port yang Anda inginkan untuk HTTPS
-const httpsServer = https.createServer(credentials, app);
-httpsServer.listen(HTTPS_PORT, () => {
-  console.log(`HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
-});
+// const HTTPS_PORT = 7800;  // Ganti dengan port yang Anda inginkan untuk HTTPS
+// const httpsServer = https.createServer(credentials, app);
+// httpsServer.listen(HTTPS_PORT, () => {
+//   console.log(`HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
+// });
