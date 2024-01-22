@@ -33,6 +33,18 @@ exports.getlastanemo3d = (req, res) => {
   });
 };
 
+exports.getlatestanemo3d = (req, res) => {
+  anemo3d.findOne({
+    order: [['timestamp', 'DESC']],
+  })
+  .then((result) => {
+    res.json(result); // Gunakan 'res' bukan 'response'
+  })
+  .catch((error) => {
+    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
+  });
+};
+
 // Mendownload data anemo3d
 exports.downloadanemo3d = async (req, res) => {
   try {
