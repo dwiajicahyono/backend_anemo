@@ -62,7 +62,7 @@ const anemo3d = anemo_sequelize.define("anemo3d", {
   approx_altitude: {
     type: Sequelize.FLOAT,
   },
-  absolute_humidity: {
+  h2o: {
     type: Sequelize.FLOAT,
   },
 });

@@ -54,7 +54,7 @@ exports.carbondaily = (request, response) => {
       [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
       [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
       [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
-      [Sequelize.fn('avg', Sequelize.col('absolute_humidity')), 'absolute_humidity']
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o']
     ],
     where: {
       createdAt: {
@@ -77,7 +77,7 @@ exports.carbondaily = (request, response) => {
           sht31_temperature: parseFloat(item.sht31_temperature),
           sht31_humidity: parseFloat(item.sht31_humidity),
           approx_altitude: parseFloat(item.approx_altitude),
-          absolute_humidity: parseFloat(item.absolute_humidity),
+          h2o: parseFloat(item.h2o),
         };
       });
       response.json(modifiedResult);
@@ -153,7 +153,7 @@ exports.carbonweekly = async (request, response) => {
       [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
       [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
       [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
-      [Sequelize.fn('avg', Sequelize.col('absolute_humidity')), 'absolute_humidity']
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o']
     ],
     where: {
       createdAt: {
@@ -175,7 +175,7 @@ exports.carbonweekly = async (request, response) => {
         sht31_temperature: parseFloat(item.sht31_temperature),
         sht31_humidity: parseFloat(item.sht31_humidity),
         approx_altitude: parseFloat(item.approx_altitude),
-        absolute_humidity: parseFloat(item.absolute_humidity),
+        h2o: parseFloat(item.h2o),
       };
     });
     response.json(modifiedResult);
@@ -250,7 +250,7 @@ exports.carbonmonthly = async (request, response) => {
       [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
       [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
       [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
-      [Sequelize.fn('avg', Sequelize.col('absolute_humidity')), 'absolute_humidity']
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o']
     ],
     where: {
       createdAt: {
@@ -272,7 +272,7 @@ exports.carbonmonthly = async (request, response) => {
         sht31_temperature: parseFloat(item.sht31_temperature),
         sht31_humidity: parseFloat(item.sht31_humidity),
         approx_altitude: parseFloat(item.approx_altitude),
-        absolute_humidity: parseFloat(item.absolute_humidity),
+        h2o: parseFloat(item.h2o),
       };
     });
     response.json(modifiedResult);
