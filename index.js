@@ -23,7 +23,7 @@ const credentials = {
   cert: certificate,
   ca: ca
 };
-
+// end konfigurasi http
 const app = express();
 
 
@@ -78,3 +78,4 @@ const httpsServer = https.createServer(credentials, app);
 httpsServer.listen(HTTPS_PORT, () => {
   console.log(`HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
 });
+// End server

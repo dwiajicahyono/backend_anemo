@@ -421,39 +421,73 @@ exports.downloadanemo3d = async (req, res) => {
   try {
     // Validasi dan konversi parameter
     const startDate = new Date(req.query.startDate);
+    startDate.setHours(0, 0, 0, 0); // Set waktu mulai pukul 00:00
     const endDate = new Date(req.query.endDate);
+    endDate.setHours(23, 59, 59, 999); // Set waktu berakhir pukul 23:59
     const limit = parseInt(req.query.limit);
-
+    
     console.log(`Received parameters: startDate = ${startDate}, endDate = ${endDate}, limit = ${limit}`);
+    
+    // Menghitung total hari dan durasi setiap interval
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+    const intervalDuration = totalDays / limit;
+    
+    // Menyiapkan array untuk menampung data yang diambil
+    const collectedData = [];
+    
+    // Loop untuk mengambil data dari setiap interval
+    for (let i = 0; i < limit; i++) {
+      const intervalStart = new Date(startDate.getTime() + (intervalDuration * i * 1000 * 60 * 60 * 24));
+      let intervalEnd;
+    
+      if (i < limit - 1) {
+        // Untuk semua interval kecuali yang terakhir, akhir interval adalah awal dari interval berikutnya
+        intervalEnd = new Date(startDate.getTime() + (intervalDuration * (i + 1) * 1000 * 60 * 60 * 24));
+      } else {
+        // Untuk interval terakhir, akhiri tepat pada endDate
+        intervalEnd = new Date(endDate);
+      }
+    
+      // Memastikan bahwa intervalEnd tidak melebihi endDate
+      if (intervalEnd > endDate) {
+        intervalEnd = new Date(endDate);
+      }
+    
+      console.log(`Interval ${i + 1}: Start = ${intervalStart.toISOString()}, End = ${intervalEnd.toISOString()}`);
+    
 
-    // Mengambil semua data yang tersedia hingga limit
-    const allData = await anemo3d.findAll({
-      where: {
-        timestamp: {
-          [Op.gte]: startDate,
-          [Op.lt]: endDate,
+      // Mengambil satu data dari interval waktu saat ini
+      const data = await anemo3d.findOne({
+        where: {
+          timestamp: {
+            [Sequelize.Op.gte]: intervalStart,
+            [Sequelize.Op.lt]: intervalEnd,
+          },
         },
-      },
-      limit: limit,
-      order: [['id', 'ASC']],
-    });
-
-    console.log(`Total data gathered: ${allData.length}`);
-
+        order: [['timestamp', 'ASC']], // Pengurutan berdasarkan 'ts' dari terkecil ke terbesar
+      });
+      // Jika data ditemukan, tambahkan ke array collectedData
+      if (data) {
+        collectedData.push(data);
+      } else {
+        console.log(`No data found for interval ${i + 1} from ${intervalStart} to ${intervalEnd}`);
+      }
+    }
+    
+    console.log(`Total data gathered: ${collectedData.length}`);
     // Setup CSV stream
     const csvStream = fastcsv.format({ headers: true });
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=CarbonDataLength-${startDate}-${endDate}-${allData.length}.csv`);
-
+    res.setHeader('Content-Disposition', `attachment; filename=DataPetengoran-limit-${limit}-Data Gathered-${collectedData.length}-Data.csv`);
     // Pipe CSV stream to response
     csvStream.pipe(res).on('end', () => res.end());
-
+    
     // Write data to CSV
-    allData.forEach(item => csvStream.write(item.dataValues));
-
+    collectedData.forEach(item => csvStream.write(item.dataValues));
+    
     // End CSV stream
     csvStream.end();
-
+    
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('Error during data download');
