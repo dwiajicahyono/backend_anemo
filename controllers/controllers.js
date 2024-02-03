@@ -3,23 +3,101 @@ const csvParser = require("csv-parser");
 const { Sequelize, Op } = require("sequelize");
 const fastcsv = require('fast-csv');
 const anemo3d = require("../models/models_3d_anemo"); // Import model sekali saja
+const moment = require('moment');
 
 // Mendapatkan 50 data anemo3d terbaru
-exports.get50anemo3d = (req, res) => {
-  anemo3d.findAll({
-    limit: 50,
-    order: [["id", "DESC"]],
-  })
-  .then(result => {
-    res.json({
-      count: result.length,
-      data: result,
+
+// Helper function to group records by second with full timestamp
+function groupBySecond(records) {
+  return records.reduce((acc, record) => {
+      // Ubah timestamp menjadi format yang unik untuk setiap detik
+      const timeKey = moment(record.timestamp).format('YYYY-MM-DD HH:mm:ss');
+      if (!acc[timeKey]) {
+          acc[timeKey] = [];
+      }
+      acc[timeKey].push(record);
+      return acc;
+  }, {});
+}
+
+function calculateModes(records) {
+  const parameterCounts = {};
+  const parameterModes = {};
+
+  records.forEach(record => {
+    // Ambil hanya bagian dataValues dari record
+    const dataValues = record.dataValues;
+
+    Object.keys(dataValues).forEach(param => {
+      if (!['timestamp', 'id'].includes(param)) {
+        const value = dataValues[param];
+        if (value != null) {
+          parameterCounts[param] = parameterCounts[param] || {};
+          parameterCounts[param][value] = (parameterCounts[param][value] || 0) + 1;
+
+          // Update mode if this value is now the most common one
+          if (!parameterModes[param] || parameterCounts[param][value] > parameterCounts[param][parameterModes[param]]) {
+            parameterModes[param] = value;  // Save just the value, not the entire Sequelize object
+          }
+        }
+      }
     });
-  })
-  .catch(error => {
-    res.status(500).json({ error: "Internal server error" });
   });
+
+  // Return an object with mode value for each parameter
+  return parameterModes;  // This should be an object with just data values
+}
+
+exports.get50anemo3d = async (req, res) => {
+  // Mengambil timestamp terakhir dari database
+  const latestTimestamp = await anemo3d.findOne({
+    attributes: ['timestamp'],
+    order: [['timestamp', 'DESC']],
+  });
+
+  if (!latestTimestamp) {
+    return res.status(404).json({ error: 'No records found' });
+  }
+
+  const lastTs = new Date(latestTimestamp.timestamp); // Pastikan ini mengacu pada field yang benar
+  const tenSecondsAgo = new Date(lastTs.getTime() - 10000); // 10,000 milliseconds = 10 seconds
+
+  try {
+    // Mengambil data dari database
+    const results = await anemo3d.findAll({
+      where: {
+        timestamp: {
+          [Op.gt]: tenSecondsAgo, // greater than 10 seconds ago
+        },
+      },
+      order: [['timestamp', 'DESC']], // Order by timestamp descending
+    });
+
+    const groupedBySecond = groupBySecond(results); // Langsung gunakan results
+
+    // For each second, calculate mode for each parameter from the 5 data points
+    const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
+      const fiveRecords = records.slice(0, 5); // Ambil 5 data teratas
+      const modeData = calculateModes(fiveRecords);
+
+      return {
+        timeKey,
+        mode: modeData
+      };
+    });
+    // Sort the result based on timeKey and take the last 10
+    const sortedModesPerSecond = modesPerSecond.sort((a, b) => a.timeKey.localeCompare(b.timeKey)).slice(-10);
+
+    // Respond with the modes per second
+    res.json(sortedModesPerSecond);
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };
+
+
 
 exports.getlastanemo3d = (req, res) => {
   anemo3d.findOne({
