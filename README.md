@@ -12,3 +12,9 @@ Endpoint API
 /gas_monthly
 /anemo_monthly
 /downloadanemo3d
+
+
+Revisi setelah kompre :
+nilai yang paling besar modusnya yang dipilih, kondisi ✅
+data 1 day benerin ✅
+download data ✅
