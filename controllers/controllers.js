@@ -608,7 +608,7 @@ exports.downloadanemo3d = async (req, res) => {
     // Setup CSV stream
     const csvStream = fastcsv.format({ headers: true });
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=Anemo3DData-${startDate.toISOString()}-${endDate.toISOString()}-Data.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=EddyStation-${collectedData.length}-Data.csv`);
 
     // Pipe CSV stream to response
     csvStream.pipe(res).on('end', () => res.end());
