@@ -44,5 +44,11 @@ router.get('/anemo_monthly', controller.anemomonthly);
 router.get('/downloadanemo3d', controller.downloadanemo3d);
 router.post('/up3d_anemo', uploadUp3D.single('csvFile'), controller.add3dAnemo);
 
+// router datalogger
+router.get('/datalog_latest', controller.getlastdatalog);
+router.get('/datalog_10data', controller.get10datalog);
+router.get('/datalog_daily', controller.dataloggerdaily);
+router.get('/datalog_weekly', controller.dataloggerweekly);
+router.get('/datalog_monthly', controller.dataloggermonthly);
 // Jangan lupa untuk mengekspor router Anda
 module.exports = router;

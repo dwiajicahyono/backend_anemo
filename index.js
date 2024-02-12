@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./models/models_3d_anemo');
+const datalogger = require('./models/datalogger_models')
 const route = require('./routes/user.routes');
 const mqttClient = require('./mqttConfig');  // Impor konfigurasi MQTT
 const multer = require('multer');
@@ -51,6 +52,7 @@ app.post('/sendcsv', upload.single('csv'), (req, res) => {
 
 // if you run again and don't wanna lose your data
 db.sequelize.sync();
+datalogger.sequelize.sync();
 
 
 

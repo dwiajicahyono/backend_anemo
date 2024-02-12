@@ -4,6 +4,7 @@ const { Sequelize, Op } = require("sequelize");
 const fastcsv = require('fast-csv');
 const anemo3d = require("../models/models_3d_anemo"); // Import model sekali saja
 const moment = require('moment');
+const datalogger = require('../models/datalogger_models')
 
 // Mendapatkan 50 data anemo3d terbaru
 
@@ -166,7 +167,7 @@ exports.getlastanemo3d = (req, res) => {
 };
 
 // ****************************************************************
-// Get Daily Data 
+// Get Data 1 hari
 // ****************************************************************
 // exports.carbondaily = (request, response) => {
 //   const currentDate = new Date();
@@ -652,5 +653,159 @@ exports.add3dAnemo = (req, res) => {
           console.error("Error:", err);
           res.status(500).send("Failed to import data");
         });
+    });
+};
+
+
+//  ****************************************************************
+//  Data Logger 
+// ****************************************************************
+
+// get last data dari datalogger
+exports.getlastdatalog = (req, res) => {
+  datalogger.findOne({
+    order: [['id', 'DESC']],
+  })
+  .then((result) => {
+    res.json(result); // Gunakan 'res' bukan 'response'
+  })
+  .catch((error) => {
+    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
+  });
+};
+
+// get 10 data dari datalogger
+exports.get10datalog = (request, response) => {
+  datalogger.findAll({
+    limit: 10,
+    order: [['id', 'DESC']],
+  })
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => {
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+
+// get data selama 1 hari
+exports.dataloggerdaily = (request, response) => {
+  const currentDate = new Date(); // Waktu saat ini
+  const startdate = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000)); // 24 jam ke belakang
+
+  datalogger.findAll({
+    attributes: [
+      // Mengelompokkan data per jam
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('createdAt')), 'createdAt'],
+       [Sequelize.fn('min', Sequelize.col('ts')), 'ts'],
+      [Sequelize.fn('avg', Sequelize.col('cpu_usage')), 'cpu_usage'],
+      [Sequelize.fn('avg', Sequelize.col('mem_gpu')), 'mem_gpu'],
+      [Sequelize.fn('avg', Sequelize.col('mem_arm')), 'mem_arm'],
+      [Sequelize.fn('avg', Sequelize.col('temp')), 'temp']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startdate, currentDate], // 24 jam ke belakang dari waktu sekarang
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('createdAt'))], // Kelompokkan per jam
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('createdAt')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          ts: item.ts, // Akses nilai menggunakan metode get
+          cpu_usage: parseFloat(item.cpu_usage),
+          mem_gpu: parseFloat(item.mem_gpu),
+          mem_arm: parseFloat(item.mem_arm),
+          temp: parseFloat(item.temp)
+        };
+      });
+      response.json(modifiedResult);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+
+// get data selama 7 hari
+exports.dataloggerweekly = async (request, response) => {
+
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 7);
+
+  // Query database untuk data setiap 30 menit selama 7 hari terakhir
+  datalogger.findAll({
+    attributes: [
+      [Sequelize.literal("date_trunc('hour', \"createdAt\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"createdAt\") / 30)"), 'ts'],
+      [Sequelize.fn('avg', Sequelize.col('cpu_usage')), 'cpu_usage'],
+      [Sequelize.fn('avg', Sequelize.col('mem_gpu')), 'mem_gpu'],
+      [Sequelize.fn('avg', Sequelize.col('mem_arm')), 'mem_arm'],
+      [Sequelize.fn('avg', Sequelize.col('temp')), 'temp']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startDate, currentDate],
+      },
+    },
+    group: [Sequelize.literal("date_trunc('hour', \"createdAt\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"createdAt\") / 30)")],
+    order: [[Sequelize.literal("date_trunc('hour', \"createdAt\") + INTERVAL '30 minutes' * FLOOR(EXTRACT(MINUTE FROM \"createdAt\") / 30)"), 'ASC']],
+  }).then(result => {
+    const modifiedResult = result.map(item => {
+      return {
+        ts: item.ts,
+        cpu_usage: parseFloat(item.cpu_usage),
+        mem_gpu: parseFloat(item.mem_gpu),
+        mem_arm: parseFloat(item.mem_arm),
+        temp: parseFloat(item.temp)
+      };
+    });
+    response.json(modifiedResult);
+  })
+    .catch(error => {
+      console.error('Error details:', error);
+      response.status(500).json({ error: 'Internal server error', details: error.message });
+    });
+};
+
+// get data 30 hari
+exports.dataloggermonthly = async (request, response) => {
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 30); // Mengatur startDate menjadi 30 hari yang lalu
+
+  // Query database untuk data setiap jam selama 30 hari terakhir
+  datalogger.findAll({
+    attributes: [
+      [Sequelize.literal("date_trunc('hour', \"ts\")"), 'ts'], // Mengelompokkan data per jam
+      [Sequelize.fn('avg', Sequelize.col('cpu_usage')), 'cpu_usage'],
+      [Sequelize.fn('avg', Sequelize.col('mem_gpu')), 'mem_gpu'],
+      [Sequelize.fn('avg', Sequelize.col('mem_arm')), 'mem_arm'],
+      [Sequelize.fn('avg', Sequelize.col('temp')), 'temp']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startDate, currentDate],
+      },
+    },
+    group: [Sequelize.literal("date_trunc('hour', \"ts\")")], // Mengelompokkan data per jam
+    order: [[Sequelize.literal("date_trunc('hour', \"ts\")"), 'ASC']],
+  }).then(result => {
+    const modifiedResult = result.map(item => {
+      return {
+        ts: item.ts,
+        cpu_usage: parseFloat(item.cpu_usage),
+        mem_gpu: parseFloat(item.mem_gpu),
+        mem_arm: parseFloat(item.mem_arm),
+        temp: parseFloat(item.temp)
+      };
+    });
+    response.json(modifiedResult);
+  })
+    .catch(error => {
+      console.error('Error details:', error);
+      response.status(500).json({ error: 'Internal server error', details: error.message });
     });
 };

@@ -1,6 +1,7 @@
 const mqtt = require('mqtt');
 const csvParser = require('csv-parser');
-const anemo3d = require('./models/models_3d_anemo');  // Impor model
+const anemo3d = require('./models/models_3d_anemo');  // Impor model anemo3d
+const datalogger = require('./models/datalogger_models')
 const stream = require('stream');
 require('dotenv').config();
 
@@ -16,6 +17,13 @@ client.on('connect', () => {
     client.subscribe('topic/filecsv', (err) => {
         if (err) {
             console.error("Error subscribing to topic:", err);
+        }
+    });
+    client.subscribe('topic/dataloggerpetengoran', (err) => {
+        if (err) {
+            console.error(`Error subscribing to 'topic/dataloggerpetengoran' :`, err);
+        } else {
+            console.log("MQTT terhubung pada : topic/dataloggerpetengoran ");  // <-- Menampilkan topik di terminal
         }
     });
 });
@@ -154,6 +162,31 @@ client.on('message', async (topic, message) => {
         }
     }
 });
+
+// Topic Logger Condition
+client.on('message', async (topic, message) => {
+    if (topic === 'topic/dataloggerpetengoran') {
+        try {
+            // Parse the message into a JSON object
+            const jsonData = JSON.parse(message.toString());
+
+            // Menunggu proses penyimpanan data
+            await datalogger.create({
+                ts: jsonData.ts,
+                humanTime: jsonData.humanTime,
+                cpu_usage: jsonData.cpu_usage,
+                mem_gpu: jsonData.mem_gpu,
+                mem_arm: jsonData.mem_arm,
+                temp: jsonData.temp,
+            });
+            console.log(`Data 'topic/dataloggerpetengoran' inserted into the database!`);
+
+        } catch (err) {
+            console.error("Error during message handling:", err);
+        }
+    }
+});
+
 
 
 module.exports = client;
