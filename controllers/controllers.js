@@ -11,13 +11,13 @@ const datalogger = require('../models/datalogger_models')
 // Helper function to group records by second with full timestamp
 function groupBySecond(records) {
   return records.reduce((acc, record) => {
-      // Ubah timestamp menjadi format yang unik untuk setiap detik
-      const timeKey = moment(record.timestamp).format('YYYY-MM-DD HH:mm:ss');
-      if (!acc[timeKey]) {
-          acc[timeKey] = [];
-      }
-      acc[timeKey].push(record);
-      return acc;
+    // Ubah timestamp menjadi format yang unik untuk setiap detik
+    const timeKey = moment(record.timestamp).format('YYYY-MM-DD HH:mm:ss');
+    if (!acc[timeKey]) {
+      acc[timeKey] = [];
+    }
+    acc[timeKey].push(record);
+    return acc;
   }, {});
 }
 // modus fungsi pertama
@@ -158,14 +158,63 @@ exports.getlastanemo3d = (req, res) => {
   anemo3d.findOne({
     order: [['id', 'DESC']],
   })
-  .then((result) => {
-    res.json(result); // Gunakan 'res' bukan 'response'
-  })
-  .catch((error) => {
-    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
-  });
+    .then((result) => {
+      res.json(result); // Gunakan 'res' bukan 'response'
+    })
+    .catch((error) => {
+      res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
+    });
 };
 
+
+
+// testing the modus data
+exports.getlatestmodus = async (req, res) => {
+  // Mengambil timestamp terakhir dari database
+  const latestTimestamp = await anemo3d.findOne({
+    attributes: ['timestamp'],
+    order: [['timestamp', 'DESC']],
+  });
+
+  if (!latestTimestamp) {
+    return res.status(404).json({ error: 'No records found' });
+  }
+
+  const lastTs = new Date(latestTimestamp.timestamp); // Pastikan ini mengacu pada field yang benar
+  const tenSecondsAgo = new Date(lastTs.getTime() - 1000); // 1 detik
+
+  try {
+    // Mengambil data dari database
+    const results = await anemo3d.findAll({
+      where: {
+        timestamp: {
+          [Op.gt]: tenSecondsAgo, // greater than 10 seconds ago
+        },
+      },
+      order: [['timestamp', 'DESC']], // Order by timestamp descending
+    });
+
+    const groupedBySecond = groupBySecond(results); // Langsung gunakan results
+
+    // For each second, calculate mode for each parameter from the 5 data points
+    const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
+      const fiveRecords = records.slice(0, 5); // Ambil 5 data teratas
+      const modeData = calculateModes(fiveRecords);
+
+      return {
+        timeKey,
+        mode: modeData
+      };
+    });
+
+    // Respond with the modes per second
+    res.json(modesPerSecond);
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 // ****************************************************************
 // Get Data 1 hari
 // ****************************************************************
@@ -220,6 +269,8 @@ exports.getlastanemo3d = (req, res) => {
 //       response.status(500).json({ error: 'Internal server error' });
 //     });
 // };
+
+
 
 exports.carbondaily = (request, response) => {
   const currentDate = new Date(); // Waktu saat ini
@@ -666,12 +717,12 @@ exports.getlastdatalog = (req, res) => {
   datalogger.findOne({
     order: [['id', 'DESC']],
   })
-  .then((result) => {
-    res.json(result); // Gunakan 'res' bukan 'response'
-  })
-  .catch((error) => {
-    res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
-  });
+    .then((result) => {
+      res.json(result); // Gunakan 'res' bukan 'response'
+    })
+    .catch((error) => {
+      res.status(500).json({ error: 'Internal server error' }); // Gunakan 'res' bukan 'response'
+    });
 };
 
 // get 10 data dari datalogger
@@ -697,7 +748,7 @@ exports.dataloggerdaily = (request, response) => {
     attributes: [
       // Mengelompokkan data per jam
       [Sequelize.fn('date_trunc', 'minute', Sequelize.col('createdAt')), 'createdAt'],
-       [Sequelize.fn('min', Sequelize.col('ts')), 'ts'],
+      [Sequelize.fn('min', Sequelize.col('ts')), 'ts'],
       [Sequelize.fn('avg', Sequelize.col('cpu_usage')), 'cpu_usage'],
       [Sequelize.fn('avg', Sequelize.col('mem_gpu')), 'mem_gpu'],
       [Sequelize.fn('avg', Sequelize.col('mem_arm')), 'mem_arm'],
@@ -809,3 +860,405 @@ exports.dataloggermonthly = async (request, response) => {
       response.status(500).json({ error: 'Internal server error', details: error.message });
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ****************************************************************
+// tester
+// calculated modus data daily
+
+function groupBySeconddaily(records) {
+  return records.reduce((acc, record) => {
+    // Ubah timestamp menjadi format yang unik untuk setiap detik
+    const timeKey = moment(record.timestamp).format('YYYY-MM-DD HH:mm:ss');
+    if (!acc[timeKey]) {
+      acc[timeKey] = [];
+    }
+    acc[timeKey].push(record);
+    return acc;
+  }, {});
+}
+function calculateModesdaily(records) {
+  const parameterCounts = {};
+
+  records.forEach(record => {
+    Object.keys(record).forEach(param => {
+      if (!['timestamp', 'id'].includes(param) && record[param] != null) {
+        const value = record[param];
+        if (!parameterCounts[param]) {
+          parameterCounts[param] = {};
+        }
+        if (!parameterCounts[param][value]) {
+          parameterCounts[param][value] = 0;
+        }
+        parameterCounts[param][value] += 1;
+      }
+    });
+  });
+
+  const parameterModes = {};
+  Object.keys(parameterCounts).forEach(param => {
+    let maxCount = 0;
+    let modeValue = null;
+
+    Object.keys(parameterCounts[param]).forEach(value => {
+      const count = parameterCounts[param][value];
+      if (count > maxCount) {
+        maxCount = count;
+        modeValue = value; // Ini masih sebagai string
+      }
+    });
+
+    // Konversi modeValue ke tipe data numerik
+    // Cek apakah nilai asli adalah integer atau float
+    if (modeValue != null) {
+      const numericValue = Number(modeValue); // Konversi ke numerik
+      parameterModes[param] = isNaN(numericValue) ? modeValue : numericValue;
+    } else {
+      parameterModes[param] = modeValue;
+    }
+  });
+
+  return parameterModes;
+}
+
+
+exports.modusdaily = (request, response) => {
+  const currentDate = new Date(); // Waktu saat ini
+  const startdate = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000)); // 24 jam ke belakang
+
+  anemo3d.findAll({
+    attributes: [
+      // Mengelompokkan data per jam
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      timestamp: {
+        [Op.between]: [startdate, currentDate], // 24 jam ke belakang dari waktu sekarang
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))], // Kelompokkan per jam
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.get('timestamp'), // Akses nilai menggunakan metode get
+          co2_concentration: parseFloat(item.get('co2_concentration')),
+          ch4_concentration: parseFloat(item.get('ch4_concentration')),
+          dht_temperature: parseFloat(item.get('dht_temperature')),
+          dht_humidity: parseFloat(item.get('dht_humidity')),
+          bmp_temperature: parseFloat(item.get('bmp_temperature')),
+          bmp_pressure: parseFloat(item.get('bmp_pressure')),
+          sht31_temperature: parseFloat(item.get('sht31_temperature')),
+          sht31_humidity: parseFloat(item.get('sht31_humidity')),
+          approx_altitude: parseFloat(item.get('approx_altitude')),
+          h2o: parseFloat(item.get('h2o')),
+          selatan: parseFloat(item.get('selatan')),
+          timur: parseFloat(item.get('timur')),
+          utara: parseFloat(item.get('utara')),
+          barat: parseFloat(item.get('barat')),
+          bawah: parseFloat(item.get('bawah')),
+          atas: parseFloat(item.get('atas')),
+        };
+      });
+
+      const groupedBySecond = groupBySeconddaily(modifiedResult); // Langsung gunakan results
+
+      // Proses seluruh records tanpa membatasi hanya 5 data teratas
+      const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
+        const modeData = calculateModesdaily(records); // Gunakan seluruh records
+
+        return {
+          timeKey,
+          mode: modeData
+        };
+      });
+
+      // Langsung kembalikan seluruh hasil tanpa melakukan slice(-10)
+      response.json(modesPerSecond);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+exports.modusweekly = (request, response) => {
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 7);
+
+  anemo3d.findAll({
+    attributes: [
+      // Mengelompokkan data per jam
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      timestamp: {
+        [Op.between]: [startDate, currentDate], // 24 jam ke belakang dari waktu sekarang
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))], // Kelompokkan per jam
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.get('timestamp'), // Akses nilai menggunakan metode get
+          co2_concentration: parseFloat(item.get('co2_concentration')),
+          ch4_concentration: parseFloat(item.get('ch4_concentration')),
+          dht_temperature: parseFloat(item.get('dht_temperature')),
+          dht_humidity: parseFloat(item.get('dht_humidity')),
+          bmp_temperature: parseFloat(item.get('bmp_temperature')),
+          bmp_pressure: parseFloat(item.get('bmp_pressure')),
+          sht31_temperature: parseFloat(item.get('sht31_temperature')),
+          sht31_humidity: parseFloat(item.get('sht31_humidity')),
+          approx_altitude: parseFloat(item.get('approx_altitude')),
+          h2o: parseFloat(item.get('h2o')),
+          selatan: parseFloat(item.get('selatan')),
+          timur: parseFloat(item.get('timur')),
+          utara: parseFloat(item.get('utara')),
+          barat: parseFloat(item.get('barat')),
+          bawah: parseFloat(item.get('bawah')),
+          atas: parseFloat(item.get('atas')),
+        };
+      });
+
+      const groupedBySecond = groupBySeconddaily(modifiedResult); // Langsung gunakan results
+
+      // Proses seluruh records tanpa membatasi hanya 5 data teratas
+      const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
+        const modeData = calculateModesdaily(records); // Gunakan seluruh records
+
+        return {
+          timeKey,
+          mode: modeData
+        };
+      });
+
+      // Langsung kembalikan seluruh hasil tanpa melakukan slice(-10)
+      response.json(modesPerSecond);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+exports.modusmonthly = (request, response) => {
+  const currentDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(currentDate.getDate() - 30);
+
+  anemo3d.findAll({
+    attributes: [
+      // Mengelompokkan data per jam
+      [Sequelize.fn('date_trunc', 'hour', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      timestamp: {
+        [Op.between]: [startDate, currentDate], // 24 jam ke belakang dari waktu sekarang
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'hour', Sequelize.col('timestamp'))], // Kelompokkan per jam
+    order: [[Sequelize.fn('date_trunc', 'hour', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.get('timestamp'), // Akses nilai menggunakan metode get
+          co2_concentration: parseFloat(item.get('co2_concentration')),
+          ch4_concentration: parseFloat(item.get('ch4_concentration')),
+          dht_temperature: parseFloat(item.get('dht_temperature')),
+          dht_humidity: parseFloat(item.get('dht_humidity')),
+          bmp_temperature: parseFloat(item.get('bmp_temperature')),
+          bmp_pressure: parseFloat(item.get('bmp_pressure')),
+          sht31_temperature: parseFloat(item.get('sht31_temperature')),
+          sht31_humidity: parseFloat(item.get('sht31_humidity')),
+          approx_altitude: parseFloat(item.get('approx_altitude')),
+          h2o: parseFloat(item.get('h2o')),
+          selatan: parseFloat(item.get('selatan')),
+          timur: parseFloat(item.get('timur')),
+          utara: parseFloat(item.get('utara')),
+          barat: parseFloat(item.get('barat')),
+          bawah: parseFloat(item.get('bawah')),
+          atas: parseFloat(item.get('atas')),
+        };
+      });
+
+      const groupedBySecond = groupBySeconddaily(modifiedResult); // Langsung gunakan results
+
+      // Proses seluruh records tanpa membatasi hanya 5 data teratas
+      const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
+        const modeData = calculateModesdaily(records); // Gunakan seluruh records
+
+        return {
+          timeKey,
+          mode: modeData
+        };
+      });
+
+      // Langsung kembalikan seluruh hasil tanpa melakukan slice(-10)
+      response.json(modesPerSecond);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+
