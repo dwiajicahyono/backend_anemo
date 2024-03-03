@@ -12,6 +12,12 @@ Endpoint API
 /anemo_monthly
 /downloadanemo3d
 
+Endpoint Modus
+/getlastmodus
+/modusdaily
+/modusweekly
+/modusmonthly
+
 ## Revisi setelah semhas :
 
 nilai yang paling besar modusnya yang dipilih, kondisi ✅
