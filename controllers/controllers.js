@@ -6,7 +6,104 @@ const anemo3d = require("../models/models_3d_anemo"); // Import model sekali saj
 const moment = require('moment');
 const datalogger = require('../models/datalogger_models')
 
-// Mendapatkan 50 data anemo3d terbaru
+// Mendapatkan data 30menit anemo3d terbaru
+exports.anemo30minute = (request, response) => {
+  const currentDate = new Date();
+  // Set the start date to 30 minutes ago
+  const startdate = new Date(currentDate.getTime() - (30 * 60 * 1000));
+  const endDate = new Date(currentDate);
+
+  anemo3d.findAll({
+    attributes: [
+      // Mengelompokkan data per menit
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('selatan')), 'selatan'],
+      [Sequelize.fn('avg', Sequelize.col('timur')), 'timur'],
+      [Sequelize.fn('avg', Sequelize.col('utara')), 'utara'],
+      [Sequelize.fn('avg', Sequelize.col('barat')), 'barat'],
+      [Sequelize.fn('avg', Sequelize.col('bawah')), 'bawah'],
+      [Sequelize.fn('avg', Sequelize.col('atas')), 'atas']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startdate, endDate],
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))],
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.get('timestamp'), // Pastikan untuk mengakses nilai menggunakan metode get jika perlu
+          selatan: parseFloat(item.get('selatan')),
+          timur: parseFloat(item.get('timur')),
+          utara: parseFloat(item.get('utara')),
+          barat: parseFloat(item.get('barat')),
+          bawah: parseFloat(item.get('bawah')),
+          atas: parseFloat(item.get('atas')),
+        };
+      });
+      response.json(modifiedResult);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
+
+exports.gas30minute = (request, response) => {
+  const currentDate = new Date();
+  // Set the start date to 30 minutes ago
+  const startdate = new Date(currentDate.getTime() - (30 * 60 * 1000));
+  const endDate = new Date(currentDate);
+
+  anemo3d.findAll({
+    attributes: [
+      // Mengelompokkan data per jam
+      [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
+      [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
+      [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
+      [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
+      [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
+      [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o']
+    ],
+    where: {
+      createdAt: {
+        [Op.between]: [startdate, endDate],
+      },
+    },
+    group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))],
+    order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
+  })
+    .then((result) => {
+      const modifiedResult = result.map(item => {
+        return {
+          timestamp: item.get('timestamp'), // Akses nilai menggunakan metode get
+          co2_concentration: parseFloat(item.get('co2_concentration')),
+          ch4_concentration: parseFloat(item.get('ch4_concentration')),
+          dht_temperature: parseFloat(item.get('dht_temperature')),
+          dht_humidity: parseFloat(item.get('dht_humidity')),
+          bmp_temperature: parseFloat(item.get('bmp_temperature')),
+          bmp_pressure: parseFloat(item.get('bmp_pressure')),
+          sht31_temperature: parseFloat(item.get('sht31_temperature')),
+          sht31_humidity: parseFloat(item.get('sht31_humidity')),
+          approx_altitude: parseFloat(item.get('approx_altitude')),
+          h2o: parseFloat(item.get('h2o')),
+        };
+      });
+      response.json(modifiedResult);
+    })
+    .catch((error) => {
+      console.error("Error detail:", error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+};
 
 // Helper function to group records by second with full timestamp
 function groupBySecond(records) {

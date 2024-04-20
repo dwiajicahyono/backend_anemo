@@ -40,6 +40,10 @@ router.get('/modusweekly', controller.modusweekly);
 router.get('/modusmonthly', controller.modusmonthly);
 
 
+//  30 minute
+router.get('/anemo30', controller.anemo30minute);
+router.get('/gas30', controller.gas30minute);
+
 
 router.get('/edstation_latest', controller.getlastanemo3d);
 router.get('/gas_daily', controller.carbondaily);

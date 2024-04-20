@@ -14,22 +14,25 @@ const options = {
 const client = mqtt.connect(process.env.LINKMQTT, options);
 
 client.on('connect', () => {
-    client.subscribe('topic/filecsv', (err) => {
+    client.subscribe(process.env.TOPIC_EDY, (err) => {
         if (err) {
             console.error("Error subscribing to topic:", err);
+        } else {
+            console.log("1. MQTT terhubung pada : ", process.env.TOPIC_EDY);  // <-- Menampilkan topik di terminal
         }
     });
-    client.subscribe('topic/dataloggerpetengoran', (err) => {
+    client.subscribe(process.env.TOPIC_LOG, (err) => {
         if (err) {
-            console.error(`Error subscribing to 'topic/dataloggerpetengoran' :`, err);
+            console.error(`Error subscribing to ${process.env.TOPIC_LOG}' :`, err);
         } else {
-            console.log("MQTT terhubung pada : topic/dataloggerpetengoran ");  // <-- Menampilkan topik di terminal
+            console.log("2. MQTT terhubung pada : ", process.env.TOPIC_LOG);  // <-- Menampilkan topik di terminal
         }
+
     });
 });
 
 // client.on('message', async (topic, message) => {
-//     if (topic === 'topic/filecsv') {
+//     if (topic === process.env.TOPIC_EDY) {
 //         try {
 //             const csvData = message.toString();
 //             const data = [];
@@ -83,7 +86,7 @@ client.on('connect', () => {
 // });
 
 client.on('message', async (topic, message) => {
-    if (topic === 'topic/filecsv') {
+    if (topic === process.env.TOPIC_EDY) {
         try {
             const csvData = message.toString();
             const data = [];
@@ -124,7 +127,7 @@ client.on('message', async (topic, message) => {
                 .on('data', (row) => {
                     // let waktuParts = row.waktu.split('.');
                     // row.waktu = `${waktuParts[0].padStart(2, '0')}:${waktuParts[1].padStart(2, '0')}:${waktuParts[2].padStart(2, '0')}`;
-                  
+
                     row.selatan = parseFloat(row.selatan);
                     row.timur = parseFloat(row.timur);
                     row.utara = parseFloat(row.utara);
@@ -139,7 +142,7 @@ client.on('message', async (topic, message) => {
                     row.bmp_pressure = parseFloat(row.bmp_pressure);
                     row.sht31_temperature = parseFloat(row.sht31_temperature);
                     row.sht31_humidity = parseFloat(row.sht31_humidity);
-                    
+
 
                     data.push(row);
                 })
@@ -165,7 +168,7 @@ client.on('message', async (topic, message) => {
 
 // Topic Logger Condition
 client.on('message', async (topic, message) => {
-    if (topic === 'topic/dataloggerpetengoran') {
+    if (topic === $process.env.TOPIC_LOG) {
         try {
             // Parse the message into a JSON object
             const jsonData = JSON.parse(message.toString());
@@ -179,7 +182,7 @@ client.on('message', async (topic, message) => {
                 mem_arm: jsonData.mem_arm,
                 temp: jsonData.temp,
             });
-            console.log(`Data 'topic/dataloggerpetengoran' inserted into the database!`);
+            console.log(`Data ${process.env.TOPIC_LOG}  inserted into the database!`);
 
         } catch (err) {
             console.error("Error during message handling:", err);
