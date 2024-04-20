@@ -168,7 +168,7 @@ client.on('message', async (topic, message) => {
 
 // Topic Logger Condition
 client.on('message', async (topic, message) => {
-    if (topic === $process.env.TOPIC_LOG) {
+    if (topic === process.env.TOPIC_LOG) {
         try {
             // Parse the message into a JSON object
             const jsonData = JSON.parse(message.toString());
