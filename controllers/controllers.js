@@ -117,34 +117,6 @@ function groupBySecond(records) {
     return acc;
   }, {});
 }
-// modus fungsi pertama
-// function calculateModes(records) {
-//   const parameterCounts = {};
-//   const parameterModes = {};
-
-//   records.forEach(record => {
-//     // Ambil hanya bagian dataValues dari record
-//     const dataValues = record.dataValues;
-
-//     Object.keys(dataValues).forEach(param => {
-//       if (!['timestamp', 'id'].includes(param)) {
-//         const value = dataValues[param];
-//         if (value != null) {
-//           parameterCounts[param] = parameterCounts[param] || {};
-//           parameterCounts[param][value] = (parameterCounts[param][value] || 0) + 1;
-
-//           // Update mode if this value is now the most common one
-//           if (!parameterModes[param] || parameterCounts[param][value] > parameterCounts[param][parameterModes[param]]) {
-//             parameterModes[param] = value;  // Save just the value, not the entire Sequelize object
-//           }
-//         }
-//       }
-//     });
-//   });
-
-//   // Return an object with mode value for each parameter
-//   return parameterModes;  // This should be an object with just data values
-// }
 
 // modus yang menangani nilai paling besar apabila tidak ada modus dan mengambil nilai terbesar apabila ada dua modus yang sama 
 function calculateModes(records) {
@@ -312,60 +284,7 @@ exports.getlatestmodus = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-// ****************************************************************
-// Get Data 1 hari
-// ****************************************************************
-// exports.carbondaily = (request, response) => {
-//   const currentDate = new Date();
-//   const startdate = new Date(currentDate);
-//   startdate.setDate(currentDate.getDate() - 1);
-//   const endDate = new Date(currentDate);
 
-//   anemo3d.findAll({
-//     attributes: [
-//       [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'timestamp'],
-//       [Sequelize.fn('avg', Sequelize.col('co2_concentration')), 'co2_concentration'],
-//       [Sequelize.fn('avg', Sequelize.col('ch4_concentration')), 'ch4_concentration'],
-//       [Sequelize.fn('avg', Sequelize.col('dht_temperature')), 'dht_temperature'],
-//       [Sequelize.fn('avg', Sequelize.col('dht_humidity')), 'dht_humidity'],
-//       [Sequelize.fn('avg', Sequelize.col('bmp_temperature')), 'bmp_temperature'],
-//       [Sequelize.fn('avg', Sequelize.col('bmp_pressure')), 'bmp_pressure'],
-//       [Sequelize.fn('avg', Sequelize.col('sht31_temperature')), 'sht31_temperature'],
-//       [Sequelize.fn('avg', Sequelize.col('sht31_humidity')), 'sht31_humidity'],
-//       [Sequelize.fn('avg', Sequelize.col('approx_altitude')), 'approx_altitude'],
-//       [Sequelize.fn('avg', Sequelize.col('h2o')), 'h2o']
-//     ],
-//     where: {
-//       createdAt: {
-//         [Op.between]: [startdate, endDate],
-//       },
-//     },
-//     group: [Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp'))],
-//     order: [[Sequelize.fn('date_trunc', 'minute', Sequelize.col('timestamp')), 'ASC']],
-//   })
-//     .then((result) => {
-//       const modifiedResult = result.map(item => {
-//         return {
-//           timestamp: item.timestamp,
-//           co2_concentration: parseFloat(item.co2_concentration),
-//           ch4_concentration: parseFloat(item.ch4_concentration),
-//           dht_temperature: parseFloat(item.dht_temperature),
-//           dht_humidity: parseFloat(item.dht_humidity),
-//           bmp_temperature: parseFloat(item.bmp_temperature),
-//           bmp_pressure: parseFloat(item.bmp_pressure),
-//           sht31_temperature: parseFloat(item.sht31_temperature),
-//           sht31_humidity: parseFloat(item.sht31_humidity),
-//           approx_altitude: parseFloat(item.approx_altitude),
-//           h2o: parseFloat(item.h2o),
-//         };
-//       });
-//       response.json(modifiedResult);
-//     })
-//     .catch((error) => {
-//       console.error("Error detail:", error);
-//       response.status(500).json({ error: 'Internal server error' });
-//     });
-// };
 
 
 
