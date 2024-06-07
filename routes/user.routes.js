@@ -4,6 +4,9 @@ const fs = require('fs');
 
 const router = express.Router();
 const controller = require('../controllers/controllers');
+const logcontroller = require('../controllers/logcontroller')
+const dhtcontroller = require('../controllers/dhtcontrollers')
+
 
 const anemo_3D = '3d_anemo';
 
@@ -63,4 +66,16 @@ router.get('/datalog_daily', controller.dataloggerdaily);
 router.get('/datalog_weekly', controller.dataloggerweekly);
 router.get('/datalog_monthly', controller.dataloggermonthly);
 // Jangan lupa untuk mengekspor router Anda
+router.get('/log_latest', logcontroller.getOneLogCarbon1);
+router.get('/log10', logcontroller.get10LogCarbon1);
+
+// Router dht eddy station
+router.get('/dht_latest', dhtcontroller.getOneDhtCarbon1);
+router.get('/dht10', dhtcontroller.get10DhtCarbon1);
+router.get('/dht_daily', dhtcontroller.dhtCarbon1daily);
+router.get('/dht_weekly', dhtcontroller.dht1weekly);
+router.get('/dht_monthly', dhtcontroller.dht1monthly);
+router.get('/dht_download', dhtcontroller.downloaddht1);
+
+
 module.exports = router;
