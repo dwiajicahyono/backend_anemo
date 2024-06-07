@@ -35,34 +35,28 @@ const anemo3d = anemo_sequelize.define("anemo3d", {
   atas: {
     type: Sequelize.FLOAT,
   },
-  co2_concentration: {
+  co2: {
     type: Sequelize.FLOAT,
   },
-  ch4_concentration: {
+  ch4: {
     type: Sequelize.FLOAT,
   },
-  dht_temperature: {
+  H2OSHT85: {
     type: Sequelize.FLOAT,
   },
-  dht_humidity: {
+  bmp388Pressure: {
     type: Sequelize.FLOAT,
   },
-  bmp_temperature: {
+  bmp388Temp: {
     type: Sequelize.FLOAT,
   },
-  bmp_pressure: {
+  bmp388ApprxAltitude: {
     type: Sequelize.FLOAT,
   },
-  sht31_temperature: {
+  sht85Humi: {
     type: Sequelize.FLOAT,
   },
-  sht31_humidity: {
-    type: Sequelize.FLOAT,
-  },
-  approx_altitude: {
-    type: Sequelize.FLOAT,
-  },
-  h2o: {
+  sht85Temp: {
     type: Sequelize.FLOAT,
   },
 });

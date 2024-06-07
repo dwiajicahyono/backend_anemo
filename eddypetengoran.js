@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./models/models_3d_anemo');
 const datalogger = require('./models/datalogger_models')
+const dbdht = require('./models/dht_models')
+const dblog = require('./models/log_models')
 const route = require('./routes/user.routes');
 const mqttClient = require('./mqttConfig');  // Impor konfigurasi MQTT
 const multer = require('multer');
@@ -14,27 +16,7 @@ const upload = multer({ storage: storage });
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-// Start Server
-// konfigurasi http
-// const privateKey = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/privkey.pem', 'utf8');
-// const certificate = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/cert.pem', 'utf8');
-// const ca = fs.readFileSync('/etc/letsencrypt/live/vps.isi-net.org/chain.pem', 'utf8');
 
-// const credentials = {
-//   key: privateKey,
-//   cert: certificate,
-//   ca: ca
-// };
-// // end konfigurasi http
-// // Starting the https server
-// // Mulai server HTTPS
-
-// const HTTPS_PORT = 7800;  // Ganti dengan port yang Anda inginkan untuk HTTPS
-// const httpsServer = https.createServer(credentials, app);
-// httpsServer.listen(HTTPS_PORT, () => {
-//   console.log(`HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
-// });
-// End server
 
 const app = express();
 
@@ -64,6 +46,8 @@ app.post('/sendcsv', upload.single('csv'), (req, res) => {
 // if you run again and don't wanna lose your data
 db.sequelize.sync();
 datalogger.sequelize.sync();
+dbdht.sequelize.sync();
+dblog.sequelize.sync();
 
 
 
