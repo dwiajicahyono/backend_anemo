@@ -14,9 +14,12 @@ const dht_sequelize = new Sequelize(
 );
 
 const dht = dht_sequelize.define("dhteddystation", {
-    // ts: {
-    //     type: Sequelize.DATE,
-    // },
+    ts: {
+        type: Sequelize.DATE,
+    },
+    humanTime: {
+        type: Sequelize.STRING,
+    },
     dht22Temp: {
         type: Sequelize.FLOAT,
     },
