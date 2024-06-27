@@ -203,7 +203,10 @@ exports.get50anemo3d = async (req, res) => {
     const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
       const fiveRecords = records.slice(0, 5); // Ambil 5 data teratas
       const modeData = calculateModes(fiveRecords);
-
+      // Mengalikan nilai bmp388Pressure dengan 10
+      if (modeData.bmp388Pressure) {
+        modeData.bmp388Pressure *= 10;
+      }
       return {
         timeKey,
         mode: modeData
@@ -250,7 +253,7 @@ exports.getlatestmodus = async (req, res) => {
   }
 
   const lastTs = new Date(latestTimestamp.timestamp); // Pastikan ini mengacu pada field yang benar
-  const tenSecondsAgo = new Date(lastTs.getTime() - 1000); // 1 detik
+  const tenSecondsAgo = new Date(lastTs.getTime() - 10000); // 10 detik
 
   try {
     // Mengambil data dari database
@@ -269,6 +272,11 @@ exports.getlatestmodus = async (req, res) => {
     const modesPerSecond = Object.entries(groupedBySecond).map(([timeKey, records]) => {
       const fiveRecords = records.slice(0, 5); // Ambil 5 data teratas
       const modeData = calculateModes(fiveRecords);
+
+      // Mengalikan nilai bmp388Pressure dengan 10
+      if (modeData.bmp388Pressure) {
+        modeData.bmp388Pressure *= 10;
+      }
 
       return {
         timeKey,
