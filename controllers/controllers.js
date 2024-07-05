@@ -602,20 +602,19 @@ exports.anemomonthly = async (request, response) => {
 
 // Mendownload data anemo3d
 
-exports.downloadanemo3d = async (req, res) => {
+// Endpoint untuk mengirim pembaruan progres
+exports.progressanemo3d = async (req, res) => {
   try {
     const startDate = new Date(req.query.startDate);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(req.query.endDate);
     endDate.setHours(23, 59, 59, 999);
 
-    const pageSize = 1000; // Tentukan ukuran batch, sesuaikan dengan kapasitas memori
+    const pageSize = 1000;
     let offset = 0;
     let hasMoreData = true;
-
     const collectedData = [];
 
-    // Set up Server-Sent Events
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -637,26 +636,46 @@ exports.downloadanemo3d = async (req, res) => {
       if (dataBatch.length > 0) {
         collectedData.push(...dataBatch);
         offset += dataBatch.length;
-        // Send progress update to client
         res.write(`data: ${JSON.stringify({ progress: collectedData.length })}\n\n`);
       } else {
         hasMoreData = false;
       }
     }
 
-    console.log(`Total data gathered: ${collectedData.length}`);
+    res.write(`data: ${JSON.stringify({ completed: true, total: collectedData.length })}\n\n`);
+    res.end();
 
-    // Setup CSV stream
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Error during data download');
+  }
+};
+
+// Endpoint untuk mengunduh file CSV
+exports.downloadanemo3d = async (req, res) => {
+  try {
+    const startDate = new Date(req.query.startDate);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(req.query.endDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    const data = await anemo3d.findAll({
+      where: {
+        timestamp: {
+          [Sequelize.Op.gte]: startDate,
+          [Sequelize.Op.lte]: endDate,
+        },
+      },
+      order: [['timestamp', 'ASC']],
+    });
+
     const csvStream = fastcsv.format({ headers: true });
-    res.setHeader('Content-Disposition', `attachment; filename=EddyStation-${collectedData.length}-Data.csv`);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=EddyStation-${data.length}-Data.csv`);
 
-    // Pipe CSV stream to response
     csvStream.pipe(res).on('end', () => res.end());
 
-    // Write data to CSV
-    collectedData.forEach((item) => csvStream.write(item.dataValues));
-
-    // End CSV stream
+    data.forEach((item) => csvStream.write(item.dataValues));
     csvStream.end();
 
   } catch (error) {

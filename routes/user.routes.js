@@ -57,6 +57,7 @@ router.get('/gas_monthly', controller.carbonmonthly);
 router.get('/anemo_monthly', controller.anemomonthly);
 // router.get('/carbon_latest', controller.getlatestanemo3d);
 router.get('/downloadanemo3d', controller.downloadanemo3d);
+router.get('/progressanemo3d', controller.progressanemo3d);
 router.post('/up3d_anemo', uploadUp3D.single('csvFile'), controller.add3dAnemo);
 
 // router datalogger
