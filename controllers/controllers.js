@@ -601,6 +601,7 @@ exports.anemomonthly = async (request, response) => {
 // };
 
 // Mendownload data anemo3d
+
 exports.downloadanemo3d = async (req, res) => {
   try {
     const startDate = new Date(req.query.startDate);
@@ -613,6 +614,12 @@ exports.downloadanemo3d = async (req, res) => {
     let hasMoreData = true;
 
     const collectedData = [];
+
+    // Set up Server-Sent Events
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
     while (hasMoreData) {
       const dataBatch = await anemo3d.findAll({
@@ -630,6 +637,8 @@ exports.downloadanemo3d = async (req, res) => {
       if (dataBatch.length > 0) {
         collectedData.push(...dataBatch);
         offset += dataBatch.length;
+        // Send progress update to client
+        res.write(`data: ${JSON.stringify({ progress: collectedData.length })}\n\n`);
       } else {
         hasMoreData = false;
       }
@@ -639,7 +648,6 @@ exports.downloadanemo3d = async (req, res) => {
 
     // Setup CSV stream
     const csvStream = fastcsv.format({ headers: true });
-    res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=EddyStation-${collectedData.length}-Data.csv`);
 
     // Pipe CSV stream to response
@@ -656,6 +664,61 @@ exports.downloadanemo3d = async (req, res) => {
     res.status(500).send('Error during data download');
   }
 };
+// exports.downloadanemo3d = async (req, res) => {
+//   try {
+//     const startDate = new Date(req.query.startDate);
+//     startDate.setHours(0, 0, 0, 0);
+//     const endDate = new Date(req.query.endDate);
+//     endDate.setHours(23, 59, 59, 999);
+
+//     const pageSize = 1000; // Tentukan ukuran batch, sesuaikan dengan kapasitas memori
+//     let offset = 0;
+//     let hasMoreData = true;
+
+//     const collectedData = [];
+
+//     while (hasMoreData) {
+//       const dataBatch = await anemo3d.findAll({
+//         where: {
+//           timestamp: {
+//             [Sequelize.Op.gte]: startDate,
+//             [Sequelize.Op.lte]: endDate,
+//           },
+//         },
+//         order: [['timestamp', 'ASC']],
+//         limit: pageSize,
+//         offset: offset,
+//       });
+
+//       if (dataBatch.length > 0) {
+//         collectedData.push(...dataBatch);
+//         offset += dataBatch.length;
+//       } else {
+//         hasMoreData = false;
+//       }
+//     }
+
+//     console.log(`Total data gathered: ${collectedData.length}`);
+
+//     // Setup CSV stream
+//     const csvStream = fastcsv.format({ headers: true });
+//     res.setHeader('Content-Type', 'text/csv');
+//     res.setHeader('Content-Disposition', `attachment; filename=EddyStation-${collectedData.length}-Data.csv`);
+
+//     // Pipe CSV stream to response
+//     csvStream.pipe(res).on('end', () => res.end());
+
+//     // Write data to CSV
+//     collectedData.forEach((item) => csvStream.write(item.dataValues));
+
+//     // End CSV stream
+//     csvStream.end();
+
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).send('Error during data download');
+//   }
+// };
 
 
 // Menambahkan data anemo3d dari CSV
